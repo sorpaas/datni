@@ -1,31 +1,95 @@
-var express = require('express');
-var app = express();
+var path = require('./path');
+var util = require('util');
 
-var providers = {};
-function mount(path, provider) {
-  providers[path] = provider;
-}
+function Filesystem() {
+  this.providers = {};
 
-function unmount(path) {
-  providers[path] = null;
-}
+  this.getProvider(dir) {
+    var loc = path.normalize(dir);
 
-function read(path) {
+    for(var provider_loc in providers) {
+      if(loc.startsWith(provider_loc)) {
+        return providers[provider_loc];
+      }
+    }
 
-}
+    return null;
+  }
 
-function write(path) {
+  this.getMountBase(dir) {
+    var loc = path.normalize(dir);
 
-}
+    for(var provider_loc in providers) {
+      if(loc.startsWith(provider_loc)) {
+        return provider_loc;
+      }
+    }
 
-function execute(path) {
+    return null;
+  }
 
+  this.isMounted(dir) {
+    return !!getProvider(dir);
+  }
+
+  this.mount(dir, provider) {
+    if(isMounted(dir)) {
+      throw new Error('The path is already mounted');
+    }
+
+    var loc = path.normalize(dir);
+    providers[loc] = provider;
+  }
+
+  this.unmount(dir) {
+    var loc = path.normalize(dir);
+
+    for(var provider_loc in providers) {
+      if(loc.startsWith(provider_loc)) {
+        providers[provider_loc] = null;
+      }
+    }
+  }
+
+  this.read(dir) {
+    if(!isMounted(dir)) {
+      throw new Error('Cannot find the provider of ' + dir);
+    }
+    var loc = path.normalize(dir);
+
+    var provider = getProvider(loc);
+    var relativeDir = path.relative(getMountBase(loc), loc);
+
+    return provider.read(relativeDir);
+  }
+
+  this.write(dir, content) {
+    if(!isMounted(dir)) {
+      throw new Error('Cannot find the provider of ' + dir);
+    }
+    var loc = path.normalize(dir);
+
+    var provider = getProvider(loc);
+    var relativeDir = path.relative(getMountBase(loc), loc);
+
+    return provider.write(relativeDir, content);
+  }
+
+  this.execute(dir) {
+    if(!isMounted(dir)) {
+      throw new Error('Cannot find the provider of ' + dir);
+    }
+    var loc = path.normalize(dir);
+
+    var provider = getProvider(loc);
+    var relativeDir = path.relative(getMountBase(loc), loc);
+
+    return provider.execute(relativeDir);
+  }
 }
 
 module.exports = {
-  mount: mount,
-  unmount: unmount,
-  read: read,
-  write: write,
-  execute: execute
+  createFilesystem: function() {
+    return new Filesystem();
+  }
 }
