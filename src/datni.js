@@ -2,7 +2,7 @@ var path = require('./path');
 var util = require('util');
 
 function Filesystem() {
-  this.providers = {};
+  var providers = {};
 
   this.getProvider(dir) {
     var loc = path.normalize(dir);
