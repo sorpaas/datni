@@ -1,5 +1,7 @@
 var path = require('./path');
 var util = require('util');
+var express = require('express');
+var bodyParser = require('body-parser');
 
 function Filesystem() {
   var providers = {};
@@ -85,6 +87,32 @@ function Filesystem() {
     var relativeDir = path.relative(getMountBase(loc), loc);
 
     return provider.execute(relativeDir);
+  }
+
+  this.serve(port) {
+    var app = express();
+
+    // parse application/json and application/x-www-form-urlencoded
+    app.use(bodyParser())
+
+    // parse application/vnd.api+json as json
+    app.use(bodyParser.json({ type: 'application/vnd.api+json' }))
+
+    //Serve read
+    app.get('*', function(req, res) {
+      res.send(read(req.path));
+    });
+
+    //Serve write
+    app.put('*', function(req, res) {
+      write(req.path, req.body);
+      res.status(201);
+    });
+
+    //Serve execute
+    app.post('*', function(req, res) {
+      res.send(execute(req.path));
+    });
   }
 }
 
